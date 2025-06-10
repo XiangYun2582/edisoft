@@ -2,6 +2,17 @@
 
 - 目標: 找出可能的規律
 
+> - 表目錄
+> 1. [行為模式](#行為模式)
+> 2. [999客戶訂單資料](#sports_unify_db)
+> 3. [Order表](#orders)
+> 4. [Order_lines表](#order_lines)
+> 5. [map 的表](#map 的表)
+> 6. [彙整的表](#彙整的表)
+> 7. [Power BI 呈現](#Power-BI-呈現)
+
+
+
 ## 行為模式
 
 - 999的投注公司有3間公司，分別為3S、RB和292。公司做代理商買亞洲讓分盤的貨。
@@ -16,11 +27,15 @@
 
 > Database 之所以重要的原因是甚麼有助於資料管理(資料倉儲)NF1-3，針對某筆資料去更動、加入、刪除的時候，不用花太多的時間去進行全面的更新動作，即可進行同步更動其他的表格。而不是其他人所說的為了效率，那是後面所帶來的附屬優勢。 
 
+$\blue\bigstar$   [回到表目錄](#999-買貨db)
+
 ## sports_unify_db
 
 ![999買貨流程](附檔/999買貨流程.jpg)
 
 - 999 UK: Order 獲取的資料內容
+
+$\blue\bigstar$   [回到表目錄](#999-買貨db)
 
 ### orders
 
@@ -83,6 +98,8 @@
 - `PRIMARY KEY` (`order_id`, `key_code`)
 - `index_is_settled` (`is_settled`, `choice`)
 
+$\blue\bigstar$   [回到表目錄](#999-買貨db)
+
 ### order_lines
 
 ### Table: `order_lines`
@@ -122,6 +139,8 @@
 </details>
 <br>
 
+$\blue\bigstar$   [回到表目錄](#999-買貨db)
+
 ### map 的表
 
 - `team_map`, `match_map`, `league_map`為可以對應其聯盟、隊名的表格，對於目前我們來說我們只要對應 *999 UK* 所使用的隊名和聯盟就可以了，透過web_site = 15 的方式解決。注意: 這不是垂手可得的資料，這是Scott花假日的時間透過AI 去比對，以至於不同客戶(可能會因為不同的網站或文化或語言的影響)去送單來的時候，就可以很容易地知道說應該要去做怎麼樣的下單選擇。
@@ -135,6 +154,8 @@ SELECT * FROM sports_unify_db.matches WHERE id = 658288;-- 我們的自己的網
 ![alt text](附檔/image-658288.png)
 
 
+
+$\blue\bigstar$   [回到表目錄](#999-買貨db)
 
 ### 彙整的表
 
@@ -485,4 +506,21 @@ ORDER BY
 ```
 </details>
 
+$\blue\bigstar$   [回到表目錄](#999-買貨db)
 
+## Power-BI-呈現
+
+- create database concept(for denormalize):
+  - colnames: 這裡指的維度指的是說在不同的角度去分析事件的全貌，至於原因是甚麼是因為當你的維度劃分的太細緻的時候會導致你無法看出數據的一些特徵。
+  - e.g. 當你維度從訂單彙總成日、月和年等，我們資料的範圍就可以進一步去縮小，更便於我們去看初一些端倪。
+  - 注意: 維度不單單指的是欄位而已，更具體的說是指精細程度，例如: 去除訂單(最小單位)的資訊，我們去了解說在年、季、月和日的加總(groupby, summarise)，去分析公司、不同玩法、不同的盤口...等的角度，以至於去了解到一些規律的情況。
+
+- detail
+>PK：primary key 主鍵
+NN：not null 非空值
+UQ：unique 唯一索引
+BIN：binary 二進位制的資料(比text更大)
+UN：unsigned 無符號(非負數) `UNSIGNED 是資料欄位的一個屬性，用於整數類型（如 INT, TINYINT, BIGINT 等），代表這個欄位「不接受負數」，也就是只能儲存 0 或正整數，排除負數、數值範圍加倍正向空間、用在 ID、數量、金額等場景。`
+ZF：zero fill 填充0，例如字段的內容是1 int(4), 則內容顯示0001
+AI：auto increment 自行增加
+G: Generated Column mysql5.7 新特性：這一列由其他列計算而得
