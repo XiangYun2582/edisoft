@@ -510,17 +510,167 @@ $\blue\bigstar$   [回到表目錄](#999-買貨db)
 
 ## Power-BI-呈現
 
+
+![999買貨流程](附檔/彙整order表格.jpg)
+
+<details>
+  <summary><font color=red></font></summary>
+
+```sql
+/*確認 orders_line訂單和orders*/
+SELECT * FROM sports_unify_db.orders WHERE order_id = '20ae0e46-72af-40c6-b61b-c8b8dbd9422e';
+SELECT * FROM sports_unify_db.order_lines WHERE order_id = '20ae0e46-72af-40c6-b61b-c8b8dbd9422e';
+SELECT * FROM sports_unify_db.orders WHERE order_id = '01bbdfa6-0a1d-42d1-b8d2-5f23fe4998d8';-- 一對多
+SELECT * FROM sports_unify_db.order_lines WHERE order_id = '01bbdfa6-0a1d-42d1-b8d2-5f23fe4998d8';
+/*確認 match_map 和 team_map*/
+SELECT * FROM sports_unify_db.match_map WHERE match_id = 2820 AND web_site = 15;
+SELECT * FROM sports_unify_db.orders WHERE order_id = '20ae0e46-72af-40c6-b61b-c8b8dbd9422e';
+SELECT distinct count(match_id) FROM sports_unify_db.match_map;
+SELECT count(*) FROM sports_unify_db.match_map;
+/*確認 match_map 和 league_map*/
+SELECT * FROM sports_unify_db.team_map;
+SELECT distinct count(team_id) FROM sports_unify_db.team_map;
+SELECT count(*) FROM sports_unify_db.team_map;
+```
+
+</details>
+
+- 未來的目標: 想未來的資料庫的目的走向，要走向**OLAP即時分析**、風險控管(異常下注)和**資料倉儲**等。insightflow_db
+
 - create database concept(for denormalize):
   - colnames: 這裡指的維度指的是說在不同的角度去分析事件的全貌，至於原因是甚麼是因為當你的維度劃分的太細緻的時候會導致你無法看出數據的一些特徵。
   - e.g. 當你維度從訂單彙總成日、月和年等，我們資料的範圍就可以進一步去縮小，更便於我們去看初一些端倪。
   - 注意: 維度不單單指的是欄位而已，更具體的說是指精細程度，例如: 去除訂單(最小單位)的資訊，我們去了解說在年、季、月和日的加總(groupby, summarise)，去分析公司、不同玩法、不同的盤口...等的角度，以至於去了解到一些規律的情況。
 
-- detail
+- 目前的系統是建立在'10.11.8-MariaDB-0ubuntu0.24.04.1'
+
+| 欄位名稱           | 資料型別                           | 主鍵;NULL | 說明                                                  | 用途|
+| -------------- | ------------------------------ | -- | --------------------------------------------------- |--------|
+| `order_id`     | `varchar(45)`                  | ✅  | 訂單編號                                                | 分析用不到，但有助於追追溯|
+| `key_code`     | `varchar(45)`                  | ✅  | 身分辨別                                                |分析用不到，但有助於追追溯|
+| `match_id`     | `int unsigned`                 |    | 比賽編號                                                |分析用不到，但有助於追追溯|
+| `match_time`   | `datetime`                     |    | 比賽開始時間                                                |<font color=red>重要的分類依據</font><br>轉換成年、季、月和日等不同維度下去切分。|
+| `company`      | `varchar(45)`                  |    | 公司類別                                                |<font color=red>重要的分類依據</font>|
+| `league_name`  | `varchar(45)`                  |    | 聯盟名稱                                                |<font color=red>重要的分類依據</font>|
+| `home_name`    | `varchar(45)`                  |    | 主場隊伍名稱                                              |<font color=red>重要的分類依據</font>|
+| `away_name`    | `varchar(45)`                  |    | 客場隊伍名稱                                              |<font color=red>重要的分類依據</font>|
+| `is_live`      | `tinyint(3) unsigned zerofill` |    | 是否為滾(走)盤（0=死盤，1=走盤）                                 |分析可能用不到，未來不一定|
+| `score_type`   | `varchar(45)`                  | NULL   | 得分類型，目前固定為 `1`，未來可能加入角球、點球等                         |分析可能用不到，未來不一定|
+| `market_type`  | `tinyint`                      | NULL   | 玩法類型<br>0: 無<br>1: 全場讓球盤<br>2: 全場大小球                |<font color=red>重要的分析依據</font>|
+| `choice`       | `tinyint`                      | NULL   | 下注標的<br>0: 未下注/取消<br>1: 主場<br>2: 客場<br>4: 大<br>5: 小 |<font color=red>重要的分析依據</font>|
+| `score_h`      | `tinyint`                      | NULL   | 主場得分（可能含讓分）                                         |分析可能用不到，目前想不太到意圖|
+| `score_a`      | `tinyint`                      | NULL   | 客場得分（可能含讓分）                                         |分析可能用不到，目前想不太到意圖|
+| `result_h`     | `tinyint`                      | NULL   | 主場結果                                                |分析可能用不到，目前想不太到意圖|
+| `result_a`     | `tinyint`                      |  NULL  | 客場結果                                                |分析可能用不到，目前想不太到意圖|
+| `line`         | `decimal(5,2)`                 |  NULL  | 盤口數值                                                |分析可能用不到，目前想不太到意圖|
+| `price`        | `decimal(6,3)`                 | NULL   | 賠率                                                  |分析可能用不到，目前想不太到意圖|
+| `stake`        | `decimal(9,2)`                 | NULL   | 買貨量（下注金額）                                           |<font color=red>重要的分析依據</font>|
+| `win_loss`     | `decimal(10,3)`                |  NULL  | 輸贏金額                                                |最重要的分析依據，進一步轉換成賠/走盤/賺等是否獲利欄位|
+| `status`       |   `enum(...)`                  |    | 下單狀態<br>如: prepare/placeOrder/stop/cancel           |下條件排除|
+| `is_settled`   | `tinyint`                    |    | 是否結算：0, 1                 |分析可能用不到，目前想不太到意圖|
+| `order_time`   | `timestamp(6)`                 |  NULL  | 下單時間                                                |轉換成比賽進行到第幾分鐘|
+| `created_time` | `timestamp(6)`                 |    | 建立時間                                                |分析可能用不到，目前想不太到意圖|
+| `update_time`  | `timestamp(6)`                 |    | 更新時間                                                |分析可能用不到，目前想不太到意圖|
+
+- 預期達到的成果: 
+  - 以公司的角度出發 <font color=blue>(防止有發行商去偷下注的行為)</font>
+  (假想) 在不同的維度(年, 季, 月, 日)下，確實可以發現不同的公司當期的策略有所不同，例如: 輪流輸、買貨量減少很多、購買賠率特別高(主觀)的行為...等異常行為，<font color=red>當然也要檢查說三間公司的損益在某個週期下是否都為正(重要定義)</font>，或許可以先一步看出這家公司就是專門輸的也說不定。
+  (假想) 查驗公司是否會特別購買某些聯盟和球隊。
+  (假想) 在區分 賺/~~走盤~~/賠 的時間分布的情況。(猜測說再否一段區間容易看出勝負的情況，在此假說之下合理的情況是會希望兩種圖分布為差異很大)
+  - 排除公司架構的思維下 <font color=blue>(聯盟或隊伍較容易判別)</font>
+  (假想) 若在三間公司獲利都為正收益(前者的定義)的情況之下，然後去瞭解說是不是某些聯盟(隊伍)下的比賽，其下注能成功賺錢的勝率(能猜中的次數)本身是比較高的;若發現某一間公司是專門輸錢或獲利不明朗的話，那可能就採取不同公司設為條件去篩選，或許可以作為反指標的行為分析。
+  - 排除公司架構的思維下 <font color=blue>(主客場、讓分/大小盤投注會獲利的可能性較高)</font>
+  (假想) 若在三間公司獲利都為正收益(聯盟或隊伍較容易判別)的情況之下，然後去瞭解說是不是某些玩法較容易預測(獲利)，若是以普遍來說主隊贏的可能性較高等等。
+  - 以歷史資料為切入點，<font color=blue>直接去看(球隊的勝率)</font>? 客觀角度去看。 (這邊資料要以日期和球隊(聯盟)去做groupby，要注意的一點是這不是所有的球隊資料，原因為下注者不是每一場都會去投注。)
+
+
+$\blue\bigstar$   [回到表目錄](#999-買貨db)
+
+#### 鍵值的補充
+
 >PK：primary key 主鍵
 NN：not null 非空值
 UQ：unique 唯一索引
 BIN：binary 二進位制的資料(比text更大)
-UN：unsigned 無符號(非負數) `UNSIGNED 是資料欄位的一個屬性，用於整數類型（如 INT, TINYINT, BIGINT 等），代表這個欄位「不接受負數」，也就是只能儲存 0 或正整數，排除負數、數值範圍加倍正向空間、用在 ID、數量、金額等場景。`
-ZF：zero fill 填充0，例如字段的內容是1 int(4), 則內容顯示0001
-AI：auto increment 自行增加
+> | 資料類型          | 建議使用                           |
+> | ------------- | ------------------------------ |
+> | 圖片、影片、聲音檔     | `BLOB`（或 `LONGBLOB`）           |
+> | 雜湊值（如 SHA256） | `BINARY(32)`                   |
+> | Token、UUID    | `VARBINARY(36)` 或 `BINARY(16)` |
+> | 純文字內容（例如留言）   | `TEXT` 或 `VARCHAR`             |
+>UN：unsigned 無符號(非負數) `UNSIGNED 是資料欄位的一個屬性，用於整數類型（如 INT, TINYINT, BIGINT 等），代表這個欄位「不接受負數」，也就是只能儲存 0 或正整數，排除負數、數值範圍加倍正向空間、用在 ID、數量、金額等場景。`
+
+> ZF：zero fill 填充0，例如字段的內容是1 int(4), 則內容顯示0001
+> AI：auto increment 自行增加
 G: Generated Column mysql5.7 新特性：這一列由其他列計算而得
+> | 場景      | 欄位說明                                                   |
+> | ------- | ------------------------------------------------------ |
+> | 自動計算總額  | `price * quantity`                                     |
+> | 資料清理格式化 | 從 `email` 取 domain，如 `SUBSTRING_INDEX(email, '@', -1)` |
+> | 狀態判定欄位  | 例如：`is_high_risk GENERATED ALWAYS AS (amount > 1000)`  |
+> | 年齡計算欄位  | `birth_date` → `YEAR(CURDATE()) - YEAR(birth_date)`    |
+
+#### 非正規畫的補充
+
+- 正規化（Normalization）：將資料拆分成多個表，避免重複與資料異常，強調資料一致性與更新效率。 ACID
+  - 原子性（Atomicity）：一個事務（transaction）中的所有操作，或者全部完成，或者全部不完成，不會結束在中間某個環節。事務在執行過程中發生錯誤，會被回滾（Rollback）到事務開始前的狀態，就像這個事務從來沒有執行過一樣。即，事務不可分割、不可約簡。
+  - 一致性（Consistency）：在事務開始之前和事務結束以後，資料庫的完整性沒有被破壞。這表示寫入的資料必須完全符合所有的預設約束、觸發器、級聯回滾等。
+  - 事務隔離（Isolation）：資料庫允許多個並發事務同時對其數據進行讀寫和修改的能力，隔離性可以防止多個事務並發執行時由於交叉執行而導致數據的不一致。事務隔離分為不同級別，包括未提交讀（Read uncommitted）、提交讀（read committed）、可重複讀（repeatable read）和串行化（Serializable）。
+  - 持久性（Durability）：事務處理結束後，對數據的修改就是永久的，即便系統故障也不會丟失。
+- 反正規劃：將資料表合併或嵌套，讓查詢更快速，特別是在讀取密集型的資料倉儲中很常見。
+  - 資料倉儲中的查詢常跨多表連接（JOIN），為了減少 JOIN 效能瓶頸，會採用反正規劃。
+
+在資料倉儲中，反正規劃常出現在以下兩個模型：
+
+1. 星型模型（Star Schema）
+> 事實表（Fact Table）：儲存交易紀錄，如銷售金額、數量等。
+維度表（Dimension Table）：儲存描述性資訊，如產品、客戶、時間。
+維度表通常反正規劃，讓查詢時不需再 JOIN 多層表格。
+
+- 範例：
+客戶維度表（Customer Dimension）會將「城市」、「地區」、「國家」合在一張表，而不是拆成多個正規化表。
+
+2. 雪花模型（Snowflake Schema）
+> 維度表經正規化，拆成多張表。
+結構清楚但查詢複雜、效能較低。
+若查詢效能為優先考量，會轉為星型模型，也就是進行反正規劃。
+
+| 技術                       | 說明                           | 目的         |
+| ------------------------ | ---------------------------- | ---------- |
+| 合併欄位                     | 將相關資訊存在同一表，如「地址」包含城市、街道、郵遞區號 | 減少 JOIN 次數 |
+| 加入冗餘欄位                   | 在事實表中加上維度的常用欄位，如客戶名稱         | 提升查詢速度     |
+| 計算欄位                     | 加入預先計算的值，如總價 = 數量 x 價格       | 減少即時計算     |
+| 物化檢視表（Materialized View） | 將複雜查詢的結果存成表                  | 快速存取聚合資料   |
+
+| 優點             | 缺點              |
+| -------------- | --------------- |
+| 提升查詢效能，特別是報表查詢 | 資料重複、佔用空間       |
+| 減少 JOIN 操作     | 資料一致性風險高（更新不易）  |
+| 符合 OLAP 分析模式   | ETL 較複雜，需處理資料同步 |
+
+- 反正規劃是資料倉儲中提高查詢效率的常用策略。
+- 在星型架構中廣泛應用，讓 OLAP 查詢更快。 [link](https://cloud.tencent.com/developer/article/2078753)
+- 雖然犧牲了一些資料一致性與空間，但能大幅提升資料分析效能。
+
+
+<details>
+  <summary><font color=red>補充的表格(點擊後展開)</font></summary>
+
+| 模型                          | 特徵               | 使用情境          |
+| --------------------------- | ---------------- | ------------- |
+| 星型模型（Star Schema）           | 一張事實表 + 多張扁平的維度表 | 單一主題分析        |
+| 雪花模型（Snowflake Schema）      | 維度表被正規化，拆分多張     | 複雜維度結構，需要節省空間 |
+| ⭐星座模型（Constellation Schema） | 多張事實表 + 共用維度表    | 多主題分析，跨業務領域   |
+
+| 項目        | 星座模型（Constellation Schema） | 雪花模型（Snowflake Schema） |
+| --------- | -------------------------- | ---------------------- |
+| 📘 定義     | 多張事實表共用一組維度表               | 維度表經過正規化，拆成多層結構        |
+| 📊 架構重點   | 多主題分析（如：銷售 + 退貨）           | 維度資料結構嚴謹（如：國家→地區→城市）   |
+| 🔗 維度表    | 多個事實表**共用**維度表             | 每個維度被細分成多張表            |
+| 📁 資料表數量  | 事實表多，維度表共用                 | 表數較多（維度拆開）             |
+| 🔍 查詢難度   | 較高（多事實表選擇）                 | 較高（多 JOIN）             |
+| ⚙️ ETL 難度 | 較高（同步多事實表）                 | 較高（維護正規化邏輯）            |
+| 🚀 查詢效能   | 較快（比雪花快）                   | 較慢（多表 JOIN）            |
+| 🎯 適用情境   | 複雜資料倉儲（多主題）                | 維度層級複雜，需空間節省           |
+
+</details>
