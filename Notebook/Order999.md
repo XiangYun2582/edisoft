@@ -9,7 +9,7 @@
 > 4. [Order_lines表](#order_lines)
 > 5. [map 的表](#map-的表)
 > 6. [彙整的表](#彙整的表)
-> 7. [Power BI 呈現](#Power-BI-呈現)
+> 7. [PowerBI 呈現](#PowerBI-呈現)
 
 
 
@@ -48,7 +48,7 @@ $\blue\bigstar$   [回到表目錄](#999-買貨db)
 | `match_id`     | `int(11) unsigned`                |                                 | NOT NULL                             |   比賽編號      | 應該可以對應其他關於比賽的表     |
 | `is_live`      | `tinyint(1)`                      | 0                               | NOT NULL                             |    是否為滾(走)盤 0, 1     |      |
 | `score_type`   | `tinyint(4)`                      |                                 | NOT NULL                            |      <font color= #0000ff>得分類型，都是一</font>      | 角球、點球、一般得分...等     |
-| `market_type`  | `tinyint(4)`                      |                                 | NOT NULL                             |  市場類型       | 0: 無市場類型 <br>  1: 全場讓球盤 <br> 2: 全場大小球      |
+| `market_type`  | `tinyint(4)`                      |                                 | NOT NULL                             |  市場類型       | 0: 無市場類型 <br>  1: 全場讓球盤 <br> 2: 全場大小球<br>3: 全場單雙 <br>4: 全場獨贏<br>   5: 半場讓球盤<br>   6:  半場大小球<br>   7:  半場單雙 <br>8: 半場獨贏|
 | `choice`       | `tinyint(4)`                      |                                 | NOT NULL                             | 若`choice` 和 `market_type`皆為0，可以直接忽略。      |   0: None <br> 1: Home <br>  2: Away <br>  4: Over <br>  5: Under |
 | `score_h`      | `tinyint(4)`                      | NULL                            |                                      |      <font color= #0000ff>當下得分</font>      | 主場(牽涉讓分，依照當下的情況)    |
 | `score_a`      | `tinyint(4)`                      |  NULL                            |                                      |    <font color= #0000ff>當下得分</font>       |   客場(牽涉讓分，依照當下的情況)   |
@@ -508,7 +508,7 @@ ORDER BY
 
 $\blue\bigstar$   [回到表目錄](#999-買貨db)
 
-## Power-BI-呈現
+## PowerBI 呈現
 
 
 ![999買貨流程](附檔/彙整order表格.jpg)
@@ -546,10 +546,10 @@ SELECT count(*) FROM sports_unify_db.team_map;
 
 | 欄位名稱           | 資料型別                           | 主鍵;NULL | 說明                                                  | 用途|
 | -------------- | ------------------------------ | -- | --------------------------------------------------- |--------|
-| `order_id`     | `varchar(45)`                  | ✅  | 訂單編號                                                | 分析用不到，但有助於追追溯|
-| `key_code`     | `varchar(45)`                  | ✅  | 身分辨別                                                |分析用不到，但有助於追追溯|
-| `match_id`     | `int unsigned`                 |    | 比賽編號                                                |分析用不到，但有助於追追溯|
-| `match_time`   | `datetime`                     |    | 比賽開始時間                                                |<font color=red>重要的分類依據</font><br>轉換成年、季、月和日等不同維度下去切分。|
+| ~~`order_id`~~     | `varchar(45)`                  | ✅  | 訂單編號                                                | 分析用不到，但有助於追追溯|
+| ~~`key_code`~~   | `varchar(45)`                  | ✅  | 身分辨別                                                |分析用不到，但有助於追追溯|
+| ~~`match_id`~~     | `int unsigned`                 |    | 比賽編號                                                |分析用不到，但有助於追追溯|
+| `match_time`   | `datetime`                     |    | 比賽開始時間                                                |<font color=red>重要的分類依據</font><br>轉換成年、季、月和日等不同維度下去切分(目前只有2025)。<br>年: order_year<br>季: order_quarter<br>月: order_month<br>周: order_week<br>日: order_day|
 | `company`      | `varchar(45)`                  |    | 公司類別                                                |<font color=red>重要的分類依據</font>|
 | `league_name`  | `varchar(45)`                  |    | 聯盟名稱                                                |<font color=red>重要的分類依據</font>|
 | `home_name`    | `varchar(45)`                  |    | 主場隊伍名稱                                              |<font color=red>重要的分類依據</font>|
@@ -563,28 +563,271 @@ SELECT count(*) FROM sports_unify_db.team_map;
 | `result_h`     | `tinyint`                      | NULL   | 主場結果                                                |分析可能用不到，目前想不太到意圖|
 | `result_a`     | `tinyint`                      |  NULL  | 客場結果                                                |分析可能用不到，目前想不太到意圖|
 | `line`         | `decimal(5,2)`                 |  NULL  | 盤口數值                                                |分析可能用不到，目前想不太到意圖|
-| `price`        | `decimal(6,3)`                 | NULL   | 賠率                                                  |分析可能用不到，目前想不太到意圖|
-| `stake`        | `decimal(9,2)`                 | NULL   | 買貨量（下注金額）                                           |<font color=red>重要的分析依據</font>|
+| `real_price`&`price`        | `decimal(6,3)`                 | NULL   | 賠率                                                  |分析可能用不到，目前想不太到意圖|
+| `exec_stake`        | `decimal(9,2)`                 | NULL   | 買貨量（下注金額）                                           |<font color=red>重要的分析依據</font>|
 | `win_loss`     | `decimal(10,3)`                |  NULL  | 輸贏金額                                                |最重要的分析依據，進一步轉換成賠/走盤/賺等是否獲利欄位|
-| `status`       |   `enum(...)`                  |    | 下單狀態<br>如: prepare/placeOrder/stop/cancel           |下條件排除|
-| `is_settled`   | `tinyint`                    |    | 是否結算：0, 1                 |分析可能用不到，目前想不太到意圖|
-| `order_time`   | `timestamp(6)`                 |  NULL  | 下單時間                                                |轉換成比賽進行到第幾分鐘|
-| `created_time` | `timestamp(6)`                 |    | 建立時間                                                |分析可能用不到，目前想不太到意圖|
-| `update_time`  | `timestamp(6)`                 |    | 更新時間                                                |分析可能用不到，目前想不太到意圖|
+| ~~`status`~~       |   `enum(...)`                  |    | 下單狀態<br>如: prepare/placeOrder/stop/cancel           |下條件排除|
+| ~~`is_settled`~~   | `tinyint`                    |    | 是否結算：0, 1                 |分析可能用不到，目前想不太到意圖|
+| ~~`order_time`~~   | `timestamp(6)`                 |  NULL  | 下單時間                                                |轉換成比賽進行到第幾分鐘，order_minute_diff。|
+| ~~`created_time`~~ | `timestamp(6)`                 |    | 建立時間                                                |分析可能用不到，目前想不太到意圖|
+| ~~`update_time`~~  | `timestamp(6)`                 |    | 更新時間                                                |分析可能用不到，目前想不太到意圖|
 
-- 預期達到的成果: 
-  - 以公司的角度出發 <font color=blue>(防止有發行商去偷下注的行為)</font>
-    - (假想) 在不同的維度(年, 季, 月, 日)下，確實可以發現不同的公司當期的策略有所不同，例如: 輪流輸、買貨量減少很多、購買賠率特別高(主觀)的行為...等異常行為，<font color=red>當然也要檢查說三間公司的損益在某個週期下是否都為正(重要定義)</font>，或許可以先一步看出這家公司就是專門輸的也說不定。
-    - (假想) 查驗公司是否會特別購買某些聯盟和球隊。
-    - (假想) 在區分 賺/~~走盤~~/賠 的時間分布的情況。(猜測說再否一段區間容易看出勝負的情況，在此假說之下合理的情況是會希望兩種圖分布為差異很大)
-  - 排除公司架構的思維下 <font color=blue>(聯盟或隊伍較容易判別)</font>
-    - (假想) 若在三間公司獲利都為正收益(前者的定義)的情況之下，然後去瞭解說是不是某些聯盟(隊伍)下的比賽，其下注能成功賺錢的勝率(能猜中的次數)本身是比較高的;若發現某一間公司是專門輸錢或獲利不明朗的話，那可能就採取不同公司設為條件去篩選，或許可以作為反指標的行為分析。
-  - 排除公司架構的思維下 <font color=blue>(主客場、讓分/大小盤投注會獲利的可能性較高)</font>
-    - (假想) 若在三間公司獲利都為正收益(聯盟或隊伍較容易判別)的情況之下，然後去瞭解說是不是某些玩法較容易預測(獲利)，若是以普遍來說主隊贏的可能性較高等等。
-  - 以歷史資料為切入點，<font color=blue>直接去看(球隊的勝率)</font>? 客觀角度去看。 (這邊資料要以日期和球隊(聯盟)去做groupby，要注意的一點是這不是所有的球隊資料，原因為下注者不是每一場都會去投注。)
+<details>
+  <summary>SQL</summary>
 
+```sql
+
+DELIMITER $$
+CREATE PROCEDURE export_to_new_table()
+BEGIN
+  -- 如果表已存在就先刪除
+  DROP TABLE IF EXISTS sports_unify_db.ana_table;
+
+  -- 建立新表並將查詢結果寫入
+  CREATE TABLE sports_unify_db.ana_table AS
+-- 放select from where
+END$$
+DELIMITER ;
+
+SELECT 
+	-- origin
+	company,
+	o.is_live,
+	score_type,
+	market_type,
+	choice,
+	o.score_h,
+	o.score_a,
+	o.result_h,
+	o.result_a,
+	line,
+	ol.price,
+	m.web_site,
+	lm.league_name,
+	th.team_name as home_team,
+	ta.team_name as away_team,
+--     o.`status`,
+-- update
+	IFNULL(real_price, 0) AS real_price,
+	IFNULL(exec_stake, 0) AS exec_stake,
+	IFNULL(real_win_loss,0 ) AS real_win_loss,
+    
+-- add
+	--IF(market_type IN(1,5), CASE WHEN line > 0 THEN 1 WHEN line < 0 THEN 2 ELSE 3 END, 0) AS line_type,
+  IF(market_type IN(1,5), CASE WHEN (o.choice = 2 AND ol.line < 0) OR (o.choice = 1 AND ol.line > 0) THEN 1 WHEN (o.choice = 1 AND ol.line < 0) OR (o.choice = 2 AND ol.line > 0) THEN 2 ELSE 3 END, 0) AS line_type,
+	-- time
+	TIMESTAMPDIFF(MINUTE, m.kick_off_time, o.order_time) AS order_minute_diff,
+	YEAR(o.order_time) AS order_year,
+	QUARTER(o.order_time) AS order_quarter,
+	MONTH(o.order_time) AS order_month,
+	WEEK(o.order_time, 1) AS order_week,       -- mode=1 表示週一為每週第一天
+	DAY(o.order_time) AS order_day,
+	DATE(o.order_time) AS order_date,
+    -- 自訂週期（每3/4/5天一週期）
+	FLOOR(DATEDIFF(o.order_time, '2024-01-01') / 3) + 1 AS cycle_3day,
+	FLOOR(DATEDIFF(o.order_time, '2024-01-01') / 4) + 1 AS cycle_4day,
+	FLOOR(DATEDIFF(o.order_time, '2024-01-01') / 5) + 1 AS cycle_5day,
+    
+	-- 勝負
+	CASE 
+  WHEN real_win_loss IS NULL THEN 'unknown'
+  WHEN real_win_loss > 0 THEN 'win'
+  WHEN real_win_loss = 0 THEN 'tie'
+  ELSE 'loss'
+END AS result_type,
+	IF(real_win_loss>0,1,0) AS win_count,
+	IF(real_win_loss=0,1,0) AS tie_count,
+	IF(real_win_loss<0,1,0) AS loss_count
+    
+	FROM orders o
+	JOIN order_lines ol 
+	ON o.order_id = ol.order_id AND o.key_code = ol.key_code
+	
+    JOIN match_map m
+	ON CAST(o.match_id AS CHAR) = m.match_id
+	JOIN league_map lm
+	ON m.league_id = lm.league_id
+	AND m.web_site = lm.web_site
+	JOIN team_map th
+	ON m.home_team_id = th.team_id
+	JOIN team_map ta
+	ON m.away_team_id = ta.team_id
+	WHERE m.web_site = 15 AND market_type != 0;
+
+
+-- 其他 check
+SELECT 
+    o.order_id,
+    o.key_code,
+    o.order_time,
+    m.kick_off_time,
+    -- 其他欄位…
+    lm.league_name,
+    th.team_name AS home_team,
+    ta.team_name AS away_team
+FROM orders o
+JOIN order_lines ol ON o.order_id = ol.order_id AND o.key_code = ol.key_code
+JOIN match_map   m  ON o.match_id = m.match_id
+JOIN league_map  lm ON m.league_id = lm.league_id AND m.web_site = lm.web_site
+JOIN team_map    th ON m.home_team_id = th.team_id
+JOIN team_map    ta ON m.away_team_id = ta.team_id
+WHERE m.web_site = 15
+  AND o.market_type != 0
+  AND (o.order_time IS NULL OR m.kick_off_time IS NULL);   -- 關鍵：找出任何一欄為 NULL
+```
+
+```sql
+-- create Procedures 建立新的的表
+call ana_beta();
+```
+
+</details>
+🎯 預期達到的成果
+
+✅ 以公司的角度出發 (防止有發行商去偷下注的行為)
+
+- (假想) 在不同維度（年、季、月、日）下，可觀察到不同公司的策略變化，例如：
+
+  - 輪流輸
+
+  - 買貨量明顯減少
+
+  - 購買賠率特別高（主觀判斷）
+
+🔴 關鍵定義：檢查三家公司在某段週期下的損益是否皆為正值，可能提前察覺某公司是「專門輸」的。
+
+- (假想) 查驗公司是否特別偏好下注某些聯盟或球隊。
+
+- (假想) 區分「賺/走盤/賠」的時間分布，若在某些區間有明顯勝負差異，可能可用來識別策略。
+
+✅ 排除公司架構下 (聯盟或隊伍較容易判別)
+- (假想) 若三家公司皆為正收益，則可觀察：
+
+  - 是否有聯盟或球隊下的比賽，下注成功率顯著較高。
+
+  - 若某公司為長期虧損或不穩定，則可能可作為反指標使用。
+
+✅ 排除公司架構下 (玩法策略角度)
+
+- (假想) 若三家公司獲利皆為正，可觀察：
+
+  - 某些玩法（如讓分、大小）是否較易預測/獲利？
+
+  - 是否普遍來說主隊較容易贏（例如主場優勢等）？
+
+❌ 排除方向 (歷史資料勝率分析困難)
+- 雖然想透過球隊勝率作為客觀指標，但由於投注非全場涵蓋，且牽涉讓分問題，資料不足導致無法實行。
+
+📊 EDA 發現
+- 公司整體損益表現
+期間：2024/2/17 ～ 2024/6/10
+
+- 三家公司損益皆為正：
+3S > 292 > RB
+
+- 不同玩法類型分析 (market_type / choice)
+  - 讓分盤 HDP（line_type=3: 主讓分 / 2: 無讓分 / 1: 客讓分） 三家皆為正收益，3S在下注客隊時獲利明顯領先。
+![alt text](/附檔/不同玩法類型分析.png)
+  - 詳細情況：
+    - 有讓分（主/客）：僅 3S 獲利穩定，RB 與 292 無明顯獲利。
+    - 無讓分：僅 292 有獲利，RB 與 3S 為虧損。
+
+  - 大小盤 O/U: 整體獲利下降明顯，3S 損失最為嚴重。
+  - 大小盤進一步分析（下注「大」或「小」）
+    - 3S 並非全盤皆輸： 賭「大」損失大於賭「小」的獲利。
+- 買貨量觀察: 3S 買貨量遠大於其他兩家，2024年5月的買貨量明顯高出其他月份 → 值得進一步探究其原因。
+![alt text](/附檔/買貨量觀察.png)
+
+- 單純就以日期來看，我發現RB和3S的損益起伏是大致相同，~~至於下注策略需要進一步去查證(下注的聯賽有很大不同)~~，從週為一個單位來看更為明顯(備註: 以不同星期為基準，差異性不大，對於時間來說就只是平移/位移的概念，不影響結論)。292的損益起伏不會太大，相對於RB和3S的獲利軌跡有明顯的差異。
+
+- 在客隊讓分的情況下，3S公司在下注獲利的成功率是遠高於其他隊伍。
+- 3S在下注HDP客隊: 在義大利A組、西班牙和英超等是比較準的(以不損失的立場來看)。
+- 3S下大小盤損失情況最為嚴重，尤其在是在義大利A組、其次是德國一級聯賽。
+- 損益時間軌跡觀察，以日期觀察：
+  - RB 與 3S 的損益起伏軌跡類似
+  - 292波動較小，與其他兩者差異明顯
+  以週為單位觀察更明顯（平移性無影響）
+- 3S 在下注「HDP 客隊」時獲利成功率高於其他公司
+  - 對應聯盟：義大利A組、西班牙聯賽、英超聯賽
+- 3S 下「大小盤」損失最嚴重，義大利A組損失最重，其次為德國一級聯賽
 
 $\blue\bigstar$   [回到表目錄](#999-買貨db)
+
+#### 其他角度出發
+
+- 以訂貨量為出發點，猜錯為無法容忍、猜中為其次目的。
+
+分別以天、3天、4天、5天和週等去了解大致的週期變化，可以發現以一天為單位波動太激烈，無法了解其失誤率落的範圍，主觀認為以4天為週期的設定為最佳，因為到第五、七天變化程度就沒什麼改變。此外，我透過兩兩比較的方式，發現失誤率最小的是3S，其次依序為292，最後是RB。從趨勢線的角度來看，RB和3S的失誤率有下降的趨勢，而292有些微上升趨勢。
+
+
+![alt text](/附檔/買貨量.png)
+![alt text](/附檔/失誤率4A.png)
+![alt text](/附檔/失誤率4B.png)
+![alt text](/附檔/失誤率4C.png)
+
+- 若忽略公司的情況下，總體來說趨勢線是向下。
+
+![alt text](/附檔/失誤率不分公司.png)
+$\blue\bigstar$   [回到表目錄](#999-買貨db)
+
+- 讓分盤
+  - 當客隊讓分的情況下，3S雖然猜對機率相較兩家沒有比較高，但是其失誤率是低非常多的。
+  - 當主隊讓分的情況下，三家都沒有很好地猜中最後的結果，比較特別的是3S仍然是失誤率最低的。
+  - 當沒有讓分的情況下，三家策略都會轉變成比較保守，大都以走盤收場。另一方面，也或許是無讓分局的局面本身就較難猜中，相較於前兩種情況其猜中的機率下降10到20%之多。
+  - 以整體策略來說，3S所呈現出來的結果，失誤率是相較低為25%，而走盤占比也是最多的為40%，相較其他兩家較為保守。其背後的原因猜測3S投注的賽事較大，所投注的金額可能較高，因此策略較為保守。所觀察到前投注次數高的賽事有Germany 2. Bundesliga, France Ligue 1, Spain La Liga, England Premier Lge等等。至於292和RB是中到小的聯賽，例如:England Premier League 2, Bulgaria 1st Division, Portugal Segunda Liga, Germany 3.Liga等等
+- 大小盤: 無論是哪一家公司都不太擅長猜測。
+- 
+![alt text](image.png)
+
+#### 足球時間的補充
+
+| 項目         | 說明                                             |
+| ---------- | ---------------------------------------------- |
+| **時間長度**   | 總共 30 分鐘，分成上下半場各 15 分鐘。                        |
+| **中場休息**   | 加時上、下半場之間通常有短暫休息（1\~2 分鐘）。                     |
+| **是否再平手？** | 若 120 分鐘後仍然平手，則進入 **點球大戰（Penalty Shoot-out）**。 |
+| **是否一定有？** | 只有在**需要分出勝負**的比賽才會有（例如淘汰賽）。聯賽平手則直接結束比賽。        |
+
+| 階段    | 時間             | 是否有勝負                  |
+| ----- | -------------- | ---------------------- |
+| 正規時間  | 90 分鐘          | 若平手：某些比賽結束（如聯賽），某些進入加時 |
+| 加時上半場 | 15 分鐘（91–105）  | 若仍平手，繼續加時下半場           |
+| 加時下半場 | 15 分鐘（106–120） | 若仍平手，進入點球大戰            |
+
+- 「補時」與「加時」在足球比賽中是兩個完全不同的概念
+
+| 項目         | 補時（Injury Time / Stoppage Time） | 加時（Extra Time）            |
+| ---------- | ------------------------------- | ------------------------- |
+| **何時發生**   | 每個半場結束前（上、下半場各一次）               | 正規90分鐘平手時才有               |
+| **目的**     | 補回比賽中斷時間（換人、犯規、傷停）              | 決出勝負，避免平手                 |
+| **時間長度**   | 通常1～6分鐘不等                       | 固定30分鐘（15分鐘x2）            |
+| **出現條件**   | 每場比賽都有（上下半場）                    | 只有淘汰賽平手時才有                |
+| **是否必定出現** | ✅ 一定會有（上、下半場）                   | ❌ 只有需要勝負的比賽才出現            |
+| **顯示方式**   | 顯示為 45+3'、90+5' 等               | 顯示為 105'、120' 等（或加時上、下半場） |
+| **是否可進球**  | ✅ 可以進球                          | ✅ 可以進球                    |
+
+✅ 補時（Injury Time）
+又稱「傷停補時」、「Stoppage Time」。
+
+由主裁判判定（根據比賽中斷的總時長決定）。
+
+例子：
+
+上半場結束前顯示：45+2'
+
+下半場結束前顯示：90+4'
+
+✅ 加時（Extra Time）
+是延長賽的一部分，發生在 90 分鐘之後。
+
+只用於必須分出勝負的情況，例如：
+
+世界盃淘汰賽、歐冠決賽、盃賽準決賽等。
+
+結束後還平手，進入點球大戰（Penalty Shootout）。
+
+- 補時是因比賽過程中斷而延長的時間，每場比賽都會有。
+- 加時是比賽打平時再打的延長賽，只有淘汰賽才會出現。
 
 #### 鍵值的補充
 
@@ -674,3 +917,218 @@ G: Generated Column mysql5.7 新特性：這一列由其他列計算而得
 | 🎯 適用情境   | 複雜資料倉儲（多主題）                | 維度層級複雜，需空間節省           |
 
 </details>
+
+###### 其他
+
+- powerbi 交集聯集
+```sql
+
+--------------------------------------------------------------
+UnionCount = 
+VAR CompanyA = 
+    CALCULATETABLE(
+        VALUES('sports_unify_db sponsor_view'[league_name]), 
+        'sports_unify_db sponsor_view'[company] = "292"
+    )
+VAR CompanyB = 
+    CALCULATETABLE(
+        VALUES('sports_unify_db sponsor_view'[league_name]), 
+        'sports_unify_db sponsor_view'[company] = "RB"
+    )
+RETURN 
+    DISTINCTCOUNT(UNION(CompanyA, CompanyB)) -- 錯誤(可能為unioin all)
+
+
+DistinctLeagueCount_292_and_RB = 
+CALCULATE(
+    DISTINCTCOUNT('sports_unify_db sponsor_view'[league_name]),
+    'sports_unify_db sponsor_view'[company] IN {"292", "RB"}
+)-- 正確
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+IntersectionCount = 
+VAR CompanyA = 
+    CALCULATETABLE(
+        VALUES('sports_unify_db sponsor_view'[league_name]), 
+        'sports_unify_db sponsor_view'[company] = "292"
+    )
+VAR CompanyB = 
+    CALCULATETABLE(
+        VALUES('sports_unify_db sponsor_view'[league_name]), 
+        'sports_unify_db sponsor_view'[company] = "RB"
+    )
+RETURN 
+    COUNTROWS(INTERSECT(CompanyA, CompanyB))
+------------------------------------------------------------
+JaccardSimilarity = 
+VAR CompanyA =
+    CALCULATETABLE(
+        VALUES('sports_unify_db sponsor_view'[league_name]),
+        'sports_unify_db sponsor_view'[company] = "292"
+    )
+
+VAR CompanyB =
+    CALCULATETABLE(
+        VALUES('sports_unify_db sponsor_view'[league_name]),
+        'sports_unify_db sponsor_view'[company] = "RB"
+    )
+
+VAR IntersectCount = COUNTROWS(INTERSECT(CompanyA, CompanyB))
+VAR UnionCount = CALCULATE(
+    DISTINCTCOUNT('sponsor_view'[league_name]),
+    'sponsor_view'[company] IN {"292", "RB"}
+)
+
+RETURN DIVIDE(IntersectCount, UnionCount)
+-----------------------------------------------------------
+CosineSimilarity_3S_RB = 
+VAR SponsorMatrix =
+    ADDCOLUMNS (
+        SUMMARIZE ( 'sponsor_view', 'sponsor_view'[league_name] ),
+        "sponsor1", CALCULATE ( SUM ( 'sponsor_view'[sponsor_count] ), 'sponsor_view'[company] = "3S" ),
+        "sponsor2", CALCULATE ( SUM ('sponsor_view'[sponsor_count] ), 'sponsor_view'[company] = "RB" )
+    )
+
+VAR DotProduct =
+    SUMX ( SponsorMatrix, [sponsor1] * [sponsor2] )
+
+VAR MagnitudeA =
+    SQRT ( SUMX ( SponsorMatrix, [sponsor1]^2 ) )
+
+VAR MagnitudeB =
+    SQRT ( SUMX ( SponsorMatrix, [sponsor2]^2 ) )
+
+RETURN
+    DIVIDE ( DotProduct, MagnitudeA * MagnitudeB )
+-----------------------------------------------------------
+Mutual_3S_292 = 
+VAR CompanyA =
+    CALCULATETABLE(
+        VALUES('sponsor_view'[league_name]),
+        'sponsor_view'[company] = "292"
+    )
+
+VAR CompanyB =
+    CALCULATETABLE(
+        VALUES('sponsor_view'[league_name]),
+        'sponsor_view'[company] = "3S"
+    )
+
+RETURN 
+    COUNTROWS(INTERSECT(CompanyA, CompanyB))
+```
+
+- 用 mysql 驗證
+
+```sql
+SELECT 
+  company,
+  COUNT(DISTINCT league_name) AS league_count
+FROM sports_unify_db.ana_table
+WHERE result_type <> 'unknown'
+GROUP BY company;
+
+SELECT 
+  company,
+  league_name,
+  order_date,
+  COUNT(*) AS sponsor_count,
+  line_type,
+  market_type,
+  choice
+FROM sports_unify_db.ana_table
+WHERE order_date BETWEEN '2025-04-01' AND '2025-06-30'
+AND result_type <> 'unknown'
+GROUP BY company, league_name, order_date;
+
+CREATE OR REPLACE VIEW sports_unify_db.sponsor_view AS-- 下次可以直接建table，因為效能太差。
+SELECT 
+  company,
+  league_name,
+  order_date,
+  COUNT(*) AS sponsor_count,
+  line_type,
+  market_type,
+  choice
+FROM sports_unify_db.ana_table
+WHERE order_date BETWEEN '2024-04-01' AND '2025-06-30'
+AND result_type <> 'unknown'
+GROUP BY company, league_name, order_date;
+
+-- 建立基礎矩陣（用來比對三個廠商）
+SELECT 
+  league_name,
+  SUM(CASE WHEN company = '292' THEN sponsor_count ELSE 0 END) AS sponsor1,
+  SUM(CASE WHEN company = '3S' THEN sponsor_count ELSE 0 END) AS sponsor2,
+  SUM(CASE WHEN company = 'RB' THEN sponsor_count ELSE 0 END) AS sponsor3
+FROM sponsor_view
+GROUP BY league_name;
+
+-- Cosine Similarity（以 sponsor1 vs sponsor2 為例）
+SELECT 
+  (
+    SUM(sponsor1 * sponsor2) / 
+    (SQRT(SUM(POWER(sponsor1, 2))) * SQRT(SUM(POWER(sponsor2, 2))))
+  ) AS cosine_similarity
+FROM (
+  SELECT 
+    league_name,
+    SUM(CASE WHEN company ='292' THEN sponsor_count ELSE 0 END) AS sponsor1,
+    SUM(CASE WHEN company = 'RB' THEN sponsor_count ELSE 0 END) AS sponsor2
+  FROM sponsor_view
+  GROUP BY league_name
+) AS sponsor_matrix;
+
+-- Euclidean Distance（sponsor1 vs sponsor2）
+SELECT 
+  SQRT(SUM(POWER(sponsor1 - sponsor2, 2))) AS euclidean_distance
+FROM (
+  SELECT 
+    league_name,
+    SUM(CASE WHEN company ='292' THEN sponsor_count ELSE 0 END) AS sponsor1,
+    SUM(CASE WHEN company = 'RB' THEN sponsor_count ELSE 0 END) AS sponsor2
+  FROM sponsor_view
+  GROUP BY league_name
+) AS sponsor_matrix;
+
+-- Jaccard 相似度（用是否贊助過表示）
+SELECT 
+  1.0 * SUM(CASE WHEN s1 > 0 AND s2 > 0 THEN 1 ELSE 0 END) /
+        SUM(CASE WHEN s1 > 0 OR s2 > 0 THEN 1 ELSE 0 END) AS jaccard_similarity
+FROM (
+  SELECT 
+    league_name,
+    MAX(CASE WHEN company ='292' THEN 1 ELSE 0 END) AS s1,
+    MAX(CASE WHEN company = 'RB' THEN 1 ELSE 0 END) AS s2
+  FROM sponsor_view
+  GROUP BY league_name
+) AS sponsor_binary;
+
+
+SELECT 
+  SUM(CASE WHEN s1 > 0 AND s2 > 0 THEN 1 ELSE 0 END) AS intersection_count,
+  SUM(CASE WHEN s1 > 0 OR s2 > 0 THEN 1 ELSE 0 END) AS union_count,
+  1.0 * SUM(CASE WHEN s1 > 0 AND s2 > 0 THEN 1 ELSE 0 END) /
+        SUM(CASE WHEN s1 > 0 OR s2 > 0 THEN 1 ELSE 0 END) AS jaccard_similarity
+FROM (
+  SELECT 
+    league_name,
+    MAX(CASE WHEN company = '292' THEN 1 ELSE 0 END) AS s1,
+    MAX(CASE WHEN company = 'RB' THEN 1 ELSE 0 END) AS s2
+  FROM sponsor_view
+  GROUP BY league_name
+) AS sponsor_binary;
+
+
+SELECT 
+    a.company AS company_a,
+    b.company AS company_b,
+    COUNT(DISTINCT a.league_name) AS shared_league_count
+FROM sponsor_view a
+JOIN sponsor_view b
+  ON a.league_name = b.league_name
+  AND a.company <> b.company
+GROUP BY a.company, b.company;
+```
