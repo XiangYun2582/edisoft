@@ -563,6 +563,7 @@ SELECT count(*) FROM sports_unify_db.team_map;
 | `result_h`     | `tinyint`                      | NULL   | 主場結果                                                |分析可能用不到，目前想不太到意圖|
 | `result_a`     | `tinyint`                      |  NULL  | 客場結果                                                |分析可能用不到，目前想不太到意圖|
 | `line`         | `decimal(5,2)`                 |  NULL  | 盤口數值                                                |分析可能用不到，目前想不太到意圖|
+| `line_type`         | `decimal(5,2)`                 |  NULL  | 讓分類型 ![alt text](附檔/line_type.png)                                              |交叉來分析，因為現在的讓分情況是極有可能會影響後續的下注情況|
 | `real_price`&`price`        | `decimal(6,3)`                 | NULL   | 賠率                                                  |分析可能用不到，目前想不太到意圖|
 | `exec_stake`        | `decimal(9,2)`                 | NULL   | 買貨量（下注金額）                                           |<font color=red>重要的分析依據</font>|
 | `win_loss`     | `decimal(10,3)`                |  NULL  | 輸贏金額                                                |最重要的分析依據，進一步轉換成賠/走盤/賺等是否獲利欄位|
